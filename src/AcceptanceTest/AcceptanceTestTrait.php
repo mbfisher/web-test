@@ -2,39 +2,36 @@
 
 namespace mbfisher\Web\Test\AcceptanceTest;
 
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+
 trait AcceptanceTestTrait
 {
-    private $client;
-
-    public function setClient(ApplicationClientInterface $client)
-    {
-        $this->client = $client;
-    }
-
-    public function getClient()
-    {
-        return $this->client;
-    }
+    private $application;
 
     /**
      * @return HttpKernelInterface
      */
     abstract public function buildApplication();
 
-    public function initialize()
+    public function handle(Request $request)
     {
         $app = $this->buildApplication();
-        $client = new ApplicationClient($app);
-        $this->setClient($client);
+        return $app->handle($request);
     }
 
     public function get($uri, $parameters = [], $cookies = [], $files = [], $server = [], $content = null)
     {
-        return $this->getClient()->request($uri, 'GET', $parameters, $cookies, $files, $server, $content);
+        return $this->createRequest($uri, 'GET', $parameters, $cookies, $files, $server, $content);
     }
 
     public function post($uri, $parameters = [], $cookies = [], $files = [], $server = [], $content = null)
     {
-        return $this->getClient()->request($uri, 'POST', $parameters, $cookies, $files, $server, $content);
+        return $this->createRequest($uri, 'POST', $parameters, $cookies, $files, $server, $content);
+    }
+
+    public function createRequest($uri, $method = 'GET', $parameters = [], $cookies = [], $files = [], $server = [], $content = null)
+    {
+        return Request::create($uri, $method, $parameters, $cookies, $files, $server, $content);
     }
 }
