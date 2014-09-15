@@ -1,0 +1,12 @@
+{
+    "name": "mbfisher/web-test",
+    "description": "Testing tools for Web apps",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mike Fisher",
+            "email": "mike@mbfisher.com"
+        }
+    ],
+    "require": {}
+}
