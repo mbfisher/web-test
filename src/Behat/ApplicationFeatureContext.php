@@ -41,6 +41,7 @@ abstract class ApplicationFeatureContext implements SnippetAcceptingContext
     {
         list($method, $path) = explode(' ', $signature);
         $request = Request::create($path, $method);
+        $this->client->flush();
         $this->getClient()->pushRequest($request);
     }
 
@@ -61,6 +62,44 @@ abstract class ApplicationFeatureContext implements SnippetAcceptingContext
     public function iGetAResponse($status)
     {
         $response = $this->getClient()->getResponse();
-        assertSame((int) $status, $response->getStatusCode(), $response);
+        \assertSame((int) $status, $response->getStatusCode(), $response);
+    }
+
+    /**
+     * @Then it contains :type
+     */
+    public function itContains($type)
+    {
+        $response = $this->getClient()->getResponse();
+        $contentType = $response->headers->get('Content-type');
+
+        switch ($type) {
+        case 'JSON':
+            \assertContains('application/json', $contentType);
+            break;
+        }
+    }
+
+    /**
+     * @Then it has a payload
+     */
+    public function itHasAPayload(PyStringNode $string)
+    {
+        $response = $this->getClient()->getResponse();
+        \assertSame($string->getRaw(), $response->getContent());
+    }
+
+    /**
+     * @Then the headers contain
+     */
+    public function theHeadersContain(PyStringNode $string)
+    {
+        $response = $this->getResponse();
+
+        foreach ($string->getStrings() as $header) {
+            list($name, $value) = preg_split('/\s+:\s+/', $header, 2);
+            \assertTrue($response->headers->has($name));
+            \assertEquals($value, $response->headers->get($name));
+        }
     }
 }

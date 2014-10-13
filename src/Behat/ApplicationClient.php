@@ -9,6 +9,7 @@ class ApplicationClient
 {
     private $application;
     private $queue = [];
+    private $response;
 
     public function __construct(HttpKernelInterface $application)
     {
@@ -37,10 +38,19 @@ class ApplicationClient
 
     public function getResponse()
     {
-        if (!$request = $this->getRequest()) {
-            throw new \UnexpectedValueException("Request queue empty");
+        if (!$this->response) {
+            if (!$request = $this->getRequest()) {
+                throw new \UnexpectedValueException("Request queue empty");
+            }
+
+            $this->response = $this->getApplication()->handle($request);
         }
 
-        return $this->getApplication()->handle($request);
+        return $this->response;
+    }
+
+    public function flush()
+    {
+        $this->response = null;
     }
 }
