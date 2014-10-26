@@ -48,12 +48,33 @@ abstract class ApplicationFeatureContext implements SnippetAcceptingContext
     /**
      * @When I request :signature with payload
      */
-    public function iRequestWithPayload($signature, PyStringNode $string)
+    public function iRequestWithJsonPayload($signature, PyStringNode $string)
     {
         list($method, $path) = explode(' ', $signature);
         $request = Request::create($path, $method, [], [], [], [], $string->getRaw());
-        $request->headers->set('Content-type', 'application/json');
+        $request->headers->set('Content-Type', 'application/json');
         $this->getClient()->pushRequest($request);
+    }
+
+    /**
+     * @When I request :arg1 with form payload
+     */
+    public function iRequestWithFormPayload($signature, PyStringNode $string)
+    {
+        list($method, $path) = explode(' ', $signature);
+        $request = Request::create($path, $method, json_decode($string->getRaw(), true));
+        $request->headers->set('Content-Type', 'application/x-www-form-urlencoded');
+        $this->getClient()->pushRequest($request);
+    }
+
+    /**
+     * @Then I get redirected to :location
+     */
+    public function iGetRedirectedTo($location)
+    {
+        $response = $this->getClient()->getResponse();
+        \assertTrue($response->isRedirection(), $response);
+        \assertEquals($location, $response->headers->get('Location'));
     }
 
     /**
@@ -94,10 +115,10 @@ abstract class ApplicationFeatureContext implements SnippetAcceptingContext
      */
     public function theHeadersContain(PyStringNode $string)
     {
-        $response = $this->getResponse();
+        $response = $this->getClient()->getResponse();
 
         foreach ($string->getStrings() as $header) {
-            list($name, $value) = preg_split('/\s+:\s+/', $header, 2);
+            list($name, $value) = preg_split('/\s*:\s*/', $header, 2);
             \assertTrue($response->headers->has($name));
             \assertEquals($value, $response->headers->get($name));
         }
